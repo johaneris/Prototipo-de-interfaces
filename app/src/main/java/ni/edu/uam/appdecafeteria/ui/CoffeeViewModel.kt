@@ -38,16 +38,17 @@ class CoffeeViewModel : ViewModel() {
             Ingredient("Crema Batida", 25.0)
         )
 
+        // Usamos URLs de Unsplash para que se vea profesional y con imágenes reales
         val mockProducts = listOf(
-            Product(1, "Cappuccino", "Café espresso con leche vaporizada y espuma.", 120.0, 0, "Café", coffeeIngredients),
-            Product(2, "Latte Macchiato", "Leche manchada con un toque de café espresso.", 140.0, 0, "Café", coffeeIngredients),
-            Product(3, "Americano", "Espresso con agua caliente para un sabor suave.", 80.0, 0, "Café"),
-            Product(4, "Matcha Latte", "Té verde matcha premium con leche cremosa.", 160.0, 0, "Matcha", coffeeIngredients),
-            Product(5, "Iced Matcha", "Matcha refrescante con hielo y un toque de vainilla.", 150.0, 0, "Matcha"),
-            Product(6, "Croissant de Mantequilla", "Hojaldre crujiente y tierno de pura mantequilla.", 95.0, 0, "Pastelería"),
-            Product(7, "Cheesecake de Fresa", "Tarta de queso cremosa con coulis de fresas naturales.", 180.0, 0, "Pastelería"),
-            Product(8, "Frappé de Caramelo", "Bebida fría granizada con jarabe de caramelo.", 155.0, 0, "Bebidas"),
-            Product(9, "Té Helado de Melocotón", "Té negro refrescante con sabor a melocotón.", 70.0, 0, "Bebidas")
+            Product(1, "Cappuccino Italiano", "Espresso intenso con leche cremosa y canela.", 120.0, 0, "Café", coffeeIngredients, "https://images.unsplash.com/photo-1534778101976-62847782c213?q=80&w=500"),
+            Product(2, "Latte de Vainilla", "Suave combinación de espresso y vainilla francesa.", 140.0, 0, "Café", coffeeIngredients, "https://images.unsplash.com/photo-1570968015849-0497e063877a?q=80&w=500"),
+            Product(3, "Americano Reserva", "Granos seleccionados para un sabor profundo.", 80.0, 0, "Café", imageUrl = "https://images.unsplash.com/photo-1551033406-611cf9a28f67?q=80&w=500"),
+            Product(4, "Matcha Ceremonial", "Té verde orgánico de grado ceremonial.", 160.0, 0, "Matcha", coffeeIngredients, "https://images.unsplash.com/photo-1515823064-d6e0c04616a7?q=80&w=500"),
+            Product(5, "Iced Matcha Mint", "Refrescante con menta fresca y hielo.", 150.0, 0, "Matcha", imageUrl = "https://images.unsplash.com/photo-1593444209118-205ee99607f0?q=80&w=500"),
+            Product(6, "Croissant de Almendras", "Hojaldre artesanal con crema de almendras.", 95.0, 0, "Pastelería", imageUrl = "https://images.unsplash.com/photo-1555507036-ab1f4038808a?q=80&w=500"),
+            Product(7, "Cheesecake de Frutos", "Queso crema premium con frutos rojos.", 180.0, 0, "Pastelería", imageUrl = "https://images.unsplash.com/photo-1533134242443-d4fd215305ad?q=80&w=500"),
+            Product(8, "Frappé Caramelo", "Dulce sensación helada con whipped cream.", 155.0, 0, "Bebidas", imageUrl = "https://images.unsplash.com/photo-1461023058943-07fcbe16d735?q=80&w=500"),
+            Product(9, "Smoothie Tropical", "Mezcla de mango, piña y pasión.", 130.0, 0, "Bebidas", imageUrl = "https://images.unsplash.com/photo-1502741224143-90386d7f8c82?q=80&w=500")
         )
         _uiState.update { it.copy(products = mockProducts) }
     }
@@ -65,6 +66,26 @@ class CoffeeViewModel : ViewModel() {
                 })
             } else {
                 currentState.copy(cart = currentState.cart + CartItem(product.copy()))
+            }
+        }
+    }
+
+    fun incrementQuantity(cartItem: CartItem) {
+        _uiState.update { currentState ->
+            currentState.copy(cart = currentState.cart.map {
+                if (it == cartItem) it.copy(quantity = it.quantity + 1) else it
+            })
+        }
+    }
+
+    fun decrementQuantity(cartItem: CartItem) {
+        _uiState.update { currentState ->
+            if (cartItem.quantity > 1) {
+                currentState.copy(cart = currentState.cart.map {
+                    if (it == cartItem) it.copy(quantity = it.quantity - 1) else it
+                })
+            } else {
+                currentState.copy(cart = currentState.cart - cartItem)
             }
         }
     }

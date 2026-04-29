@@ -11,6 +11,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -84,7 +85,8 @@ fun CoffeeApp(
                 if (currentScreen != CoffeeScreen.Detail && currentScreen != CoffeeScreen.Payment) {
                     CoffeeBottomBar(navController)
                 }
-            }
+            },
+            containerColor = MaterialTheme.colorScheme.background
         ) { innerPadding ->
             NavHost(
                 navController = navController,
@@ -116,6 +118,8 @@ fun CoffeeApp(
                 composable(route = CoffeeScreen.Cart.name) {
                     CartScreen(
                         cartItems = uiState.cart,
+                        onIncrement = { viewModel.incrementQuantity(it) },
+                        onDecrement = { viewModel.decrementQuantity(it) },
                         onRemoveItem = { viewModel.removeFromCart(it) },
                         onCheckout = { navController.navigate(CoffeeScreen.Payment.name) }
                     )
@@ -151,7 +155,10 @@ fun CoffeeApp(
 
 @Composable
 fun CoffeeBottomBar(navController: NavHostController) {
-    NavigationBar {
+    NavigationBar(
+        containerColor = Color.White,
+        tonalElevation = 8.dp
+    ) {
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentDestination = navBackStackEntry?.destination
         
@@ -159,19 +166,40 @@ fun CoffeeBottomBar(navController: NavHostController) {
             selected = currentDestination?.route == CoffeeScreen.Home.name,
             onClick = { navController.navigate(CoffeeScreen.Home.name) },
             icon = { Icon(Icons.Default.Home, contentDescription = null) },
-            label = { Text("Menú") }
+            label = { Text("Menú") },
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = MaterialTheme.colorScheme.primary,
+                selectedTextColor = MaterialTheme.colorScheme.primary,
+                unselectedIconColor = Color.LightGray,
+                unselectedTextColor = Color.LightGray,
+                indicatorColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+            )
         )
         NavigationBarItem(
             selected = currentDestination?.route == CoffeeScreen.Cart.name,
             onClick = { navController.navigate(CoffeeScreen.Cart.name) },
             icon = { Icon(Icons.Default.ShoppingCart, contentDescription = null) },
-            label = { Text("Carrito") }
+            label = { Text("Carrito") },
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = MaterialTheme.colorScheme.primary,
+                selectedTextColor = MaterialTheme.colorScheme.primary,
+                unselectedIconColor = Color.LightGray,
+                unselectedTextColor = Color.LightGray,
+                indicatorColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+            )
         )
         NavigationBarItem(
             selected = currentDestination?.route == CoffeeScreen.Profile.name,
             onClick = { navController.navigate(CoffeeScreen.Profile.name) },
             icon = { Icon(Icons.Default.AccountCircle, contentDescription = null) },
-            label = { Text("Perfil") }
+            label = { Text("Perfil") },
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = MaterialTheme.colorScheme.primary,
+                selectedTextColor = MaterialTheme.colorScheme.primary,
+                unselectedIconColor = Color.LightGray,
+                unselectedTextColor = Color.LightGray,
+                indicatorColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+            )
         )
     }
 }

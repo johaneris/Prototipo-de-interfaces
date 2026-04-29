@@ -11,9 +11,10 @@ data class Product(
     val name: String,
     val description: String,
     val basePrice: Double,
-    val imageRes: Int, // En una app real usaríamos URLs, aquí IDs de recursos
+    val imageRes: Int,
     val category: String,
-    val availableIngredients: List<Ingredient> = emptyList()
+    val availableIngredients: List<Ingredient> = emptyList(),
+    val imageUrl: String? = null
 ) {
     val totalPrice: Double
         get() = basePrice + availableIngredients.filter { it.isSelected }.sumOf { it.price }

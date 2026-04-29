@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
@@ -13,9 +14,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import ni.edu.uam.appdecafeteria.model.Product
 import java.util.Locale
 
@@ -38,7 +41,7 @@ fun ProductDetailScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
+                    containerColor = Color.Transparent
                 )
             )
         }
@@ -47,118 +50,168 @@ fun ProductDetailScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(16.dp)
         ) {
-            // Imagen representativa con Estilo Premium
+            // Imagen del Producto con AsyncImage
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(240.dp)
-                    .clip(MaterialTheme.shapes.extraLarge)
-                    .background(
-                        Brush.verticalGradient(
-                            listOf(MaterialTheme.colorScheme.secondaryContainer, MaterialTheme.colorScheme.primaryContainer)
-                        )
-                    ),
-                contentAlignment = Alignment.Center
+                    .height(300.dp)
+                    .clip(RoundedCornerShape(bottomStart = 40.dp, bottomEnd = 40.dp))
             ) {
-                Text(
-                    text = when(product.category) {
-                        "Café" -> "☕"
-                        "Matcha" -> "🍵"
-                        "Pastelería" -> "🥐"
-                        else -> "🥤"
-                    },
-                    fontSize = 80.sp
+                AsyncImage(
+                    model = product.imageUrl,
+                    contentDescription = product.name,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+                // Degradado para que el texto o botones superiores resalten si es necesario
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(Color.Black.copy(alpha = 0.3f), Color.Transparent),
+                                startY = 0f,
+                                endY = 200f
+                            )
+                        )
                 )
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(24.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = product.name,
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Black,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                    Surface(
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text(
+                            text = product.category,
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
 
-            Text(
-                text = product.name,
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.ExtraBold,
-                color = MaterialTheme.colorScheme.primary
-            )
-            
-            Text(
-                text = product.description,
-                style = MaterialTheme.typography.bodyLarge,
-                color = Color.Gray
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            if (currentProduct.availableIngredients.isNotEmpty()) {
-                Text(
-                    text = "Personaliza tu pedido",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
-                )
                 Spacer(modifier = Modifier.height(8.dp))
                 
-                LazyColumn(modifier = Modifier.weight(1f)) {
-                    items(currentProduct.availableIngredients.indices.toList()) { index ->
-                        val ingredient = currentProduct.availableIngredients[index]
-                        Card(
-                            modifier = Modifier.padding(vertical = 4.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color.White),
-                            shape = MaterialTheme.shapes.medium
-                        ) {
-                            Row(
+                Text(
+                    text = product.description,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = Color.Gray,
+                    lineHeight = 24.sp
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                if (currentProduct.availableIngredients.isNotEmpty()) {
+                    Text(
+                        text = "Extras & Personalización",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.ExtraBold
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    
+                    LazyColumn(modifier = Modifier.weight(1f)) {
+                        items(currentProduct.availableIngredients.indices.toList()) { index ->
+                            val ingredient = currentProduct.availableIngredients[index]
+                            Surface(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Column {
-                                    Text(ingredient.name, fontWeight = FontWeight.SemiBold)
-                                    Text("C$ ${String.format(Locale.getDefault(), "%.0f", ingredient.price)}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
+                                    .padding(vertical = 4.dp),
+                                shape = RoundedCornerShape(16.dp),
+                                color = if (ingredient.isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.05f) else Color(0xFFF8F8F8),
+                                border = if (ingredient.isSelected) androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)) else null,
+                                onClick = {
+                                    val newList = currentProduct.availableIngredients.toMutableList()
+                                    newList[index] = ingredient.copy(isSelected = !ingredient.isSelected)
+                                    currentProduct = currentProduct.copy(availableIngredients = newList)
                                 }
-                                Checkbox(
-                                    checked = ingredient.isSelected,
-                                    onCheckedChange = { isChecked ->
-                                        val newList = currentProduct.availableIngredients.toMutableList()
-                                        newList[index] = ingredient.copy(isSelected = isChecked)
-                                        currentProduct = currentProduct.copy(availableIngredients = newList)
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .padding(16.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Column {
+                                        Text(
+                                            text = ingredient.name, 
+                                            fontWeight = FontWeight.Bold,
+                                            color = if (ingredient.isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                                        )
+                                        Text(
+                                            text = "+$${String.format(Locale.US, "%.2f", ingredient.price)}", 
+                                            style = MaterialTheme.typography.bodySmall, 
+                                            color = Color.Gray
+                                        )
                                     }
-                                )
+                                    Checkbox(
+                                        checked = ingredient.isSelected,
+                                        onCheckedChange = { isChecked ->
+                                            val newList = currentProduct.availableIngredients.toMutableList()
+                                            newList[index] = ingredient.copy(isSelected = isChecked)
+                                            currentProduct = currentProduct.copy(availableIngredients = newList)
+                                        },
+                                        colors = CheckboxDefaults.colors(checkedColor = MaterialTheme.colorScheme.primary)
+                                    )
+                                }
                             }
                         }
                     }
+                } else {
+                    Spacer(modifier = Modifier.weight(1f))
                 }
-            } else {
-                Spacer(modifier = Modifier.weight(1f))
-            }
 
-            HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp), color = MaterialTheme.colorScheme.outlineVariant)
-            
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column {
-                    Text("Precio Total", style = MaterialTheme.typography.labelMedium, color = Color.Gray)
-                    Text(
-                        text = "C$ ${String.format(Locale.getDefault(), "%.0f", currentProduct.totalPrice)}",
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
+                Spacer(modifier = Modifier.height(16.dp))
                 
-                Button(
-                    onClick = { onAddToCart(currentProduct) },
-                    modifier = Modifier.height(56.dp).padding(horizontal = 16.dp),
-                    shape = MaterialTheme.shapes.large,
-                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(24.dp),
+                    color = Color.White,
+                    shadowElevation = 2.dp
                 ) {
-                    Text("Añadir al Carrito", fontWeight = FontWeight.Bold)
+                    Row(
+                        modifier = Modifier
+                            .padding(12.dp)
+                            .fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.padding(start = 12.dp)) {
+                            Text("Total", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                            Text(
+                                text = "$${String.format(Locale.US, "%.2f", currentProduct.totalPrice)}",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Black,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                        
+                        Button(
+                            onClick = { onAddToCart(currentProduct) },
+                            modifier = Modifier.height(54.dp),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD87D4A))
+                        ) {
+                            Text("Añadir al Carrito", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                        }
+                    }
                 }
             }
         }

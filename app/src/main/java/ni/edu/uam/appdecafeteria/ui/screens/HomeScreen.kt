@@ -21,11 +21,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 import ni.edu.uam.appdecafeteria.ui.CoffeeViewModel
 import ni.edu.uam.appdecafeteria.model.Product
 
@@ -50,13 +52,13 @@ fun HomeScreen(
                 searchQuery = uiState.searchQuery,
                 onSearchQueryChange = { viewModel.setSearchQuery(it) }
             )
-        }
+        },
+        containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .background(MaterialTheme.colorScheme.background)
         ) {
             // Selector de Categorías con Animación
             AnimatedVisibility(
@@ -76,21 +78,19 @@ fun HomeScreen(
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
-                // Título dinámico
                 item {
                     Text(
                         text = when {
                             isSearchActive && uiState.searchQuery.isNotEmpty() -> "Resultados para \"${uiState.searchQuery}\""
-                            selectedCategory == "Todo" -> "Nuestros Favoritos"
-                            else -> "Especialidades de $selectedCategory"
+                            selectedCategory == "Todo" -> "Especialidades del Día"
+                            else -> "Nuestra Selección de $selectedCategory"
                         },
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = MaterialTheme.colorScheme.onBackground
                     )
                 }
 
-                // Filtrado Lógico (Categoría + Búsqueda)
                 val filteredProducts = products.filter { product ->
                     (selectedCategory == "Todo" || product.category == selectedCategory) &&
                     (product.name.contains(uiState.searchQuery, ignoreCase = true) || 
@@ -98,7 +98,7 @@ fun HomeScreen(
                 }
 
                 items(filteredProducts, key = { it.id }) { product ->
-                    AnimatedProductCard(
+                    ProductPremiumCard(
                         product = product,
                         onClick = { onProductClick(product.id) }
                     )
@@ -124,70 +124,76 @@ fun HomeHeader(
     searchQuery: String,
     onSearchQueryChange: (String) -> Unit
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
+    Surface(
+        color = MaterialTheme.colorScheme.background,
+        modifier = Modifier.fillMaxWidth()
     ) {
-        if (!isSearchActive) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = "Aromas de Aquí",
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = MaterialTheme.colorScheme.primary
-                )
-                Text(
-                    text = "CAFETERÍA & PASTELERÍA",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.secondary,
-                    letterSpacing = 2.sp
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            if (!isSearchActive) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    // Logo Diferente y Profesional
+                    Surface(
+                        modifier = Modifier.size(42.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        color = MaterialTheme.colorScheme.primary
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Text("A", color = Color.White, fontWeight = FontWeight.Black, fontSize = 24.sp)
+                        }
+                    }
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column {
+                        Text(
+                            text = "Aromas de Aquí",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Black,
+                            color = MaterialTheme.colorScheme.onBackground,
+                            letterSpacing = (-0.5).sp
+                        )
+                        Text(
+                            text = "CAFÉ DE ESPECIALIDAD",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 1.5.sp
+                        )
+                    }
+                }
+            } else {
+                TextField(
+                    value = searchQuery,
+                    onValueChange = onSearchQueryChange,
+                    modifier = Modifier.weight(1f),
+                    placeholder = { Text("¿Qué te apetece hoy?") },
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        focusedIndicatorColor = MaterialTheme.colorScheme.primary,
+                        unfocusedIndicatorColor = Color.Transparent
+                    ),
+                    singleLine = true
                 )
             }
-        } else {
-            TextField(
-                value = searchQuery,
-                onValueChange = onSearchQueryChange,
-                modifier = Modifier.weight(1f),
-                placeholder = { Text("Busca tu café favorito...") },
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = Color.Transparent,
-                    unfocusedContainerColor = Color.Transparent,
-                    focusedIndicatorColor = MaterialTheme.colorScheme.primary,
-                    unfocusedIndicatorColor = Color.Transparent
-                ),
-                singleLine = true
-            )
-        }
 
-        IconButton(
-            onClick = onSearchToggle,
-            modifier = Modifier
-                .background(
-                    if (isSearchActive) MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
-                    CircleShape
-                )
-        ) {
-            Icon(
-                imageVector = if (isSearchActive) Icons.Default.Close else Icons.Default.Search,
-                contentDescription = "Buscar",
-                tint = MaterialTheme.colorScheme.primary
-            )
-        }
-
-        if (!isSearchActive) {
-            Spacer(modifier = Modifier.width(8.dp))
-            Surface(
-                modifier = Modifier.size(45.dp),
-                shape = CircleShape,
-                color = MaterialTheme.colorScheme.primaryContainer,
-                shadowElevation = 2.dp
+            IconButton(
+                onClick = onSearchToggle,
+                modifier = Modifier
+                    .background(
+                        if (isSearchActive) MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
+                        CircleShape
+                    )
             ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Text("☕", fontSize = 24.sp)
-                }
+                Icon(
+                    imageVector = if (isSearchActive) Icons.Default.Close else Icons.Default.Search,
+                    contentDescription = "Buscar",
+                    tint = MaterialTheme.colorScheme.onBackground
+                )
             }
         }
     }
@@ -200,127 +206,126 @@ fun CategorySelector(
     onCategorySelected: (String) -> Unit
 ) {
     LazyRow(
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 12.dp)
     ) {
         items(categories) { category ->
             val isSelected = category == selectedCategory
             FilterChip(
                 selected = isSelected,
                 onClick = { onCategorySelected(category) },
-                label = { Text(category) },
+                label = { 
+                    Text(
+                        category, 
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                        modifier = Modifier.padding(horizontal = 4.dp)
+                    ) 
+                },
                 colors = FilterChipDefaults.filterChipColors(
                     selectedContainerColor = MaterialTheme.colorScheme.primary,
                     selectedLabelColor = Color.White,
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.3f),
+                    containerColor = MaterialTheme.colorScheme.surface,
                     labelColor = MaterialTheme.colorScheme.primary
                 ),
-                border = null,
-                shape = RoundedCornerShape(12.dp)
+                border = FilterChipDefaults.filterChipBorder(
+                    borderColor = if (isSelected) Color.Transparent else MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
+                    enabled = true,
+                    selected = isSelected
+                ),
+                shape = RoundedCornerShape(14.dp)
             )
         }
     }
 }
 
 @Composable
-fun AnimatedProductCard(product: Product, onClick: () -> Unit) {
-    var isVisible by remember { mutableStateOf(false) }
-    LaunchedEffect(Unit) { isVisible = true }
-
-    AnimatedVisibility(
-        visible = isVisible,
-        enter = fadeIn(animationSpec = tween(500)) + slideInHorizontally(animationSpec = tween(500))
+fun ProductPremiumCard(product: Product, onClick: () -> Unit) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(140.dp)
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(130.dp)
-                .clickable(onClick = onClick),
-            shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
-            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-        ) {
-            Row(modifier = Modifier.fillMaxSize()) {
-                // Imagen con icono distintivo por categoría
-                Box(
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .width(130.dp)
-                        .clip(RoundedCornerShape(24.dp))
-                        .background(
-                            Brush.verticalGradient(
-                                listOf(
-                                    MaterialTheme.colorScheme.secondaryContainer,
-                                    MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f)
-                                )
-                            )
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = when(product.category) {
-                            "Café" -> "☕"
-                            "Matcha" -> "🍵"
-                            "Pastelería" -> "🍰"
-                            "Bebidas" -> "🍹"
-                            else -> "✨"
-                        },
-                        fontSize = 48.sp
-                    )
-                }
+        Row(modifier = Modifier.fillMaxSize()) {
+            // Imagen Real del Producto
+            Box(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .width(140.dp)
+                    .clip(RoundedCornerShape(24.dp))
+            ) {
+                AsyncImage(
+                    model = product.imageUrl,
+                    contentDescription = product.name,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+            }
 
-                Column(
-                    modifier = Modifier
-                        .padding(16.dp)
-                        .fillMaxSize(),
-                    verticalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Column {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = product.name,
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Default.Star, null, tint = Color(0xFFFFB300), modifier = Modifier.size(14.dp))
-                                Text(" 4.9", style = MaterialTheme.typography.labelSmall)
-                            }
-                        }
-                        Text(
-                            text = product.description,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color.Gray,
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-
+            Column(
+                modifier = Modifier
+                    .padding(16.dp)
+                    .fillMaxSize(),
+                verticalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.Bottom
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "$${product.basePrice}",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = MaterialTheme.colorScheme.primary
+                            text = product.name,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
-                        
                         Surface(
-                            modifier = Modifier.size(32.dp),
-                            shape = CircleShape,
-                            color = MaterialTheme.colorScheme.primary
+                            color = Color(0xFFFFF9C4),
+                            shape = RoundedCornerShape(8.dp)
                         ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Text("+", color = Color.White, fontWeight = FontWeight.Bold)
+                            Row(
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(Icons.Default.Star, null, tint = Color(0xFFFBC02D), modifier = Modifier.size(12.dp))
+                                Text(" 4.8", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
                             }
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = product.description,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.Gray,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        lineHeight = 16.sp
+                    )
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Bottom
+                ) {
+                    Text(
+                        text = "$${String.format("%.2f", product.basePrice)}",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Black,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    
+                    Surface(
+                        modifier = Modifier.size(36.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        color = Color(0xFFD87D4A) // Color naranja tipo acción (PedidosYa)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Text("+", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 20.sp)
                         }
                     }
                 }
