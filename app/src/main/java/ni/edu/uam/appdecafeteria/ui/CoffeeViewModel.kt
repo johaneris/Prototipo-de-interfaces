@@ -1,5 +1,6 @@
 package ni.edu.uam.appdecafeteria.ui
 
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -12,10 +13,13 @@ import ni.edu.uam.appdecafeteria.model.Product
 data class CoffeeUiState(
     val products: List<Product> = emptyList(),
     val cart: List<CartItem> = emptyList(),
-    val userName: String = "Usuario Cafetería",
-    val userEmail: String = "usuario@uam.edu.ni",
+    val userName: String = "Johaneris Sayrin Avalos",
+    val userEmail: String = "johaneris.avalos@uam.edu.ni",
+    val userAddress: String = "Rotonda Universitaria 1km al Sur, Managua",
+    val userProfileImage: Uri? = null,
     val orderStatus: String = "No hay pedidos activos",
-    val searchQuery: String = ""
+    val searchQuery: String = "",
+    val isLoggedIn: Boolean = true
 )
 
 class CoffeeViewModel : ViewModel() {
@@ -73,5 +77,18 @@ class CoffeeViewModel : ViewModel() {
     
     fun clearCart() {
         _uiState.update { it.copy(cart = emptyList(), orderStatus = "Pedido en preparación...") }
+    }
+
+    fun updateProfile(name: String, email: String, address: String, imageUri: Uri?) {
+        _uiState.update { it.copy(
+            userName = name,
+            userEmail = email,
+            userAddress = address,
+            userProfileImage = imageUri
+        ) }
+    }
+
+    fun logout() {
+        _uiState.update { it.copy(isLoggedIn = false) }
     }
 }
